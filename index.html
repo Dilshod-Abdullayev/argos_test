@@ -123,6 +123,7 @@ table.bk td:last-child,table.bk th:last-child{text-align:right}
 .hist span{font-size:12.5px;font-weight:700;padding:4px 8px;border-radius:8px}
 .kbd{font-size:12px;color:var(--muted);text-align:center;margin-top:10px}
 @media(max-width:620px){.kbd{display:none}}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#14213d;color:#fff;padding:12px 18px;border-radius:12px;font-weight:600;z-index:30;box-shadow:var(--shadow);max-width:90vw;text-align:center}
 .legend{display:flex;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:8px}
 </style>
 </head>
@@ -154,6 +155,54 @@ const KEY = 'dfx_quiz_v1';
 let ST = {known:{}, again:{}, wrong:{}, hist:[], pos:{}, prefs:{}};
 try { const s = JSON.parse(localStorage.getItem(KEY)||'null'); if (s) ST = Object.assign(ST, s); } catch(e){}
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(ST)); } catch(e){} }
+/* ---------- qurilmalar o'rtasida o'tkazish (backendsiz) ---------- */
+const NBITS = DATA.length;
+function b64u(bytes){ let s=''; bytes.forEach(b=>s+=String.fromCharCode(b)); return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+function unb64u(s){ s=s.replace(/-/g,'+').replace(/_/g,'/'); while(s.length%4) s+='='; const bin=atob(s); return Uint8Array.from(bin, c=>c.charCodeAt(0)); }
+function setToBits(obj){ const a=new Uint8Array(Math.ceil(NBITS/8)); for(const k in obj){ const i=+k; if(i>=0&&i<NBITS) a[i>>3]|=1<<(i&7); } let n=a.length; while(n>0&&a[n-1]===0) n--; return b64u(a.slice(0,n)); }
+function bitsToSet(s){ const o={}; if(!s) return o; const a=unb64u(s); for(let i=0;i<a.length*8&&i<NBITS;i++) if(a[i>>3]&(1<<(i&7))) o[i]=1; return o; }
+function makeSyncCode(){
+  const h = ST.hist.slice(-30).map(x=>x.p.toString(36)+'-'+Math.round(x.d/60000).toString(36)).join('_');
+  return ['v1', setToBits(ST.known), setToBits(ST.again), setToBits(ST.wrong), h].join('.');
+}
+function applySyncCode(code){
+  code = (code||'').trim();
+  const m = code.match(/[#&?]s=([^\s&]+)/); if (m) code = decodeURIComponent(m[1]);
+  const p = code.split('.'); if (p[0]!=='v1' || p.length<5) throw new Error('kod');
+  const K=bitsToSet(p[1]), A=bitsToSet(p[2]), W=bitsToSet(p[3]);
+  const before = Object.keys(ST.known).length;
+  Object.assign(ST.known, K);
+  for (const k in A) if (!ST.known[k]) ST.again[k]=1;
+  for (const k in ST.known) delete ST.again[k];
+  for (const k in W) ST.wrong[k] = Math.max(ST.wrong[k]||0, 1);
+  if (p[4]) { const seen=new Set(ST.hist.map(x=>Math.round(x.d/60000)));
+    p[4].split('_').forEach(t=>{ const [pp,dd]=t.split('-'); const d=parseInt(dd,36); if(!seen.has(d)){ ST.hist.push({p:parseInt(pp,36), d:d*60000}); seen.add(d);} });
+    ST.hist.sort((a,b)=>a.d-b.d); if (ST.hist.length>50) ST.hist = ST.hist.slice(-50); }
+  save();
+  return Object.keys(ST.known).length - before;
+}
+function syncLink(){ return location.href.split('#')[0] + '#s=' + makeSyncCode(); }
+function toast(msg){ const d=document.createElement('div'); d.className='toast'; d.innerHTML=msg; document.body.appendChild(d); setTimeout(()=>d.remove(), 4200); }
+async function copyText(txt){
+  try { await navigator.clipboard.writeText(txt); return true; } catch(e){}
+  try { const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); const ok=document.execCommand('copy'); ta.remove(); return ok; } catch(e){ return false; }
+}
+function openSync(){
+  const link = syncLink();
+  $modal.innerHTML = `<div class="modal" onclick="if(event.target===this)closeModal()"><div class="box" style="max-width:520px">
+    <h3>🔄 Boshqa qurilmada davom ettirish</h3>
+    <div class="muted small"><b>1.</b> “Havolani nusxalash” ni bosing.<br><b>2.</b> Havolani oʻzingizga Telegram (Saved Messages) orqali yuboring.<br><b>3.</b> Ikkinchi qurilmada shu havolani oching — natijalar avtomatik qoʻshiladi (oʻchmaydi, birlashadi).</div>
+    <textarea id="syncTa" readonly style="width:100%;height:84px;margin-top:12px;border-radius:12px;border:1.5px solid var(--line);padding:10px;font:12px monospace;resize:none">${esc(link)}</textarea>
+    <div class="row"><button class="btn pri" id="cpBtn">📋 Havolani nusxalash</button></div>
+    <div style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px">
+      <div class="small muted">Yoki boshqa qurilmadan olingan havola/kodni shu yerga qoʻying:</div>
+      <textarea id="impTa" placeholder="Havola yoki kod..." style="width:100%;height:64px;margin-top:8px;border-radius:12px;border:1.5px solid var(--line);padding:10px;font:12px monospace;resize:none"></textarea>
+      <div class="row"><button class="btn" onclick="closeModal()">Yopish</button><button class="btn ok" id="impBtn">⬇️ Natijalarni qoʻshish</button></div>
+    </div></div></div>`;
+  document.getElementById('cpBtn').onclick = async ()=>{ const ok = await copyText(link); if(!ok){ const ta=document.getElementById('syncTa'); ta.focus(); ta.select(); } document.getElementById('cpBtn').textContent = ok ? '✓ Nusxalandi' : 'Matnni belgilab nusxalang'; };
+  document.getElementById('impBtn').onclick = ()=>{ try { const n = applySyncCode(document.getElementById('impTa').value); closeModal(); render(); toast(`✓ Natijalar qoʻshildi (+${n} ta yodlangan)`); } catch(e){ toast('✗ Kod notoʻgʻri'); } };
+}
+
 
 /* ---------- yordamchi ---------- */
 const $app = document.getElementById('app'), $dock = document.getElementById('dock'), $modal = document.getElementById('modal');
@@ -194,7 +243,7 @@ function makeOptions(item){
 /* ---------- marshrut ---------- */
 let VIEW = 'home';
 function go(v){ VIEW = v; if (timerId && v!=='quiz') { clearInterval(timerId); timerId=null; } render(); window.scrollTo(0,0); try{ location.hash = v==='home' ? '' : v; }catch(e){} }
-window.addEventListener('hashchange', ()=>{ const h=location.hash.slice(1); if ((h==='learn'||h==='test'||h==='') && h!==VIEW && !(VIEW==='quiz'||VIEW==='result')) { VIEW = h||'home'; render(); } });
+window.addEventListener('hashchange', ()=>{ const h=location.hash.slice(1); if (h.startsWith('s=')) { try{ const n=applySyncCode('#'+h); toast(`✓ Natijalar qoʻshildi (+${n} ta yodlangan)`);}catch(e){} try{history.replaceState(null,'',location.pathname);}catch(e){} VIEW='home'; render(); return; } if ((h==='learn'||h==='test'||h==='') && h!==VIEW && !(VIEW==='quiz'||VIEW==='result')) { VIEW = h||'home'; render(); } });
 function render(){ $dock.innerHTML=''; ({home:rHome, learn:rLearn, test:rTest, quiz:rQuiz, result:rResult}[VIEW]||rHome)(); }
 
 /* ---------- BOSH SAHIFA ---------- */
@@ -229,6 +278,7 @@ function rHome(){
     <div class="stat"><b>${ST.hist.length}</b><span>Topshirilgan imtihon</span></div>
   </div>
   ${ST.hist.length ? `<div class="sec-t">Oxirgi imtihonlar</div><div class="card"><div class="hist">${ST.hist.slice(-12).reverse().map(h=>`<span style="background:${h.p>=56?'var(--ok-2)':'var(--bad-2)'};color:${h.p>=56?'var(--ok)':'var(--bad)'}">${h.p}%</span>`).join('')}</div><div class="small muted" style="margin-top:8px">Maqsad: ketma-ket 3 marta 80% dan yuqori.</div></div>`:''}
+  <button class="mode" style="margin-top:16px" onclick="openSync()"><div class="ic">🔄</div><div><h3>Telefon ↔ kompyuter: davom ettirish</h3><p>Natijalaringizni havola orqali boshqa qurilmaga oʻtkazing</p></div></button>
   <div class="sec-t">Qanday tayyorlanish kerak</div>
   <div class="card small">
     <b>1-qadam.</b> Yodlash boʻlimida har bir boʻlimni oxirigacha oʻqing (avval “Oddiy savollar”, keyin “Milliy qonunchilik”).<br>
@@ -239,7 +289,7 @@ function rHome(){
   </div>
   <div class="sec-t">Sozlamalar</div>
   <button class="btn bad" style="width:100%" onclick="confirmReset()">Barcha natijalarni tozalash</button>
-  <p class="small muted" style="text-align:center;margin-top:14px">Natijalar faqat shu brauzerda saqlanadi.</p>`;
+  <p class="small muted" style="text-align:center;margin-top:14px">Natijalar shu brauzerda saqlanadi. Boshqa qurilmaga oʻtkazish uchun “🔄 Telefon ↔ kompyuter” tugmasidan foydalaning.</p>`;
 }
 function confirmReset(){
   modal('Natijalarni tozalash', 'Yodlangan, xato va imtihon tarixi oʻchiriladi. Davom etasizmi?', 'Ha, tozalash', ()=>{ ST={known:{},again:{},wrong:{},hist:[],pos:{},prefs:{}}; save(); render(); });
@@ -458,7 +508,13 @@ document.addEventListener('keydown', e=>{
     else if (e.key==='ArrowRight' && Q.mode==='exam') qMove(1); else if (e.key==='ArrowLeft' && Q.mode==='exam') qMove(-1);
   }
 });
-const h0 = location.hash.slice(1); VIEW = (h0==='learn'||h0==='test') ? h0 : 'home';
+let h0 = location.hash.slice(1);
+if (h0.startsWith('s=')) {
+  try { const n = applySyncCode('#'+h0); setTimeout(()=>toast(`✓ Boshqa qurilmadagi natijalar qoʻshildi (+${n} ta yodlangan)`), 300); } catch(e){ setTimeout(()=>toast('✗ Sinxronlash havolasi notoʻgʻri'), 300); }
+  try { history.replaceState(null, '', location.pathname + location.search); } catch(e){ location.hash=''; }
+  h0 = '';
+}
+VIEW = (h0==='learn'||h0==='test') ? h0 : 'home';
 render();
 </script>
 </body>
