@@ -10084,7 +10084,8 @@ const DATA = ([
 "l": "y",
 "id": "akam_C01",
 "t": 1,
-"dm": 1
+"dm": 1,
+"dp": 1
 },
 {
 "c": "til",
@@ -10174,7 +10175,8 @@ const DATA = ([
 "-ga, -ning, -ni, -ning, -ni",
 "-da, -ni, -ning, -ning, -ni"
 ],
-"dm": 1
+"dm": 1,
+"dp": 1
 },
 {
 "c": "til",
@@ -10208,7 +10210,8 @@ const DATA = ([
 "l": "y",
 "id": 1556,
 "t": 1,
-"dm": 1
+"dm": 1,
+"dp": 1
 },
 {
 "c": "til",
@@ -10242,7 +10245,8 @@ const DATA = ([
 "l": "y",
 "id": 1560,
 "t": 1,
-"dm": 1
+"dm": 1,
+"dp": 1
 },
 {
 "c": "til",
@@ -10362,7 +10366,8 @@ const DATA = ([
 "l": "y",
 "id": "akam_C08",
 "t": 1,
-"dm": 1
+"dm": 1,
+"dp": 1
 },
 {
 "c": "til",
@@ -10396,7 +10401,8 @@ const DATA = ([
 "l": "y",
 "id": "akam_D05",
 "t": 1,
-"dm": 1
+"dm": 1,
+"dp": 1
 },
 {
 "c": "til",
@@ -10430,7 +10436,8 @@ const DATA = ([
 "l": "y",
 "id": "akam_E06",
 "t": 1,
-"dm": 1
+"dm": 1,
+"dp": 1
 },
 {
 "c": "til",
@@ -10723,19 +10730,21 @@ const DATA = ([
 {
 "c": "til",
 "s": "p",
-"q": "Lotin alifbosidagi imlo qoidalariga koʻra \"aпeлляция\" soʻzi toʻgʻri yozilgan javobni belgilang.",
+"q": "“apellyatsiya” soʻzining toʻgʻri yozilishi",
 "o": [
-"apellasiya",
+"appelyatsiya",
 "apellatsiya",
-"apellyatsiya",
-"appelyatsia"
+"apellasiya",
+"apellyatsiya"
 ],
 "a": "apellyatsiya",
-"i": "apellyatsiya: ля → lya, ц → ts",
+"i": "Imlo lugʻati: apellyatsiya (ruscha апелляция: ля → lya, ц → ts). appelyatsiya (ikki p), apellatsiya (ya tushib qolgan), apellasiya (ts emas s) — xato.",
 "l": "y",
 "id": 2594,
 "t": 1,
-"pf": 1
+"pf": 1,
+"dm": 1,
+"dp": 1
 },
 {
 "c": "til",
@@ -12644,22 +12653,6 @@ const DATA = ([
 {
 "c": "til",
 "s": "r",
-"q": "Qaysi javobda kelishik qoʻshimchasini qoʻllash bilan bogliq xatolik uchraydi?",
-"a": "U oʻz maqsadini erishdi.",
-"i": "«Erishmoq» feʼli joʻnalish kelishigini talab qiladi: maqsadiga erishdi.",
-"l": "o",
-"id": 1057,
-"t": 1,
-"w": [
-"U oʻz maqsadiga erishdi.",
-"Ish qarorga muvofiq bajarildi.",
-"Biz hujjatni koʻrib chiqdik."
-],
-"nm": 1
-},
-{
-"c": "til",
-"s": "r",
 "q": "“Bayonnoma ilmiy kengashlar konferensiyalar yigʻilishlar anjumanlar faoliyatlarida yoziladigan hujjat hisoblanadi.” Ushbu gapda necha oʻrinda vergul qoʻyilishi lozim?",
 "a": "3 ta",
 "i": "Uyushiq boʻlaklar orasida: ilmiy kengashlar, konferensiyalar, yigʻilishlar, anjumanlar — 3 ta vergul.",
@@ -13801,6 +13794,42 @@ const DATA = ([
 "id": "akt_rep10",
 "t": 1,
 "pf": 1
+},
+{
+"c": "til",
+"s": "d",
+"q": "Kasallik sabab davolanish uchun beriladigan hujjat",
+"o": [
+"bildirishnoma",
+"maʼlumotnoma",
+"tilxat",
+"ariza"
+],
+"a": "ariza",
+"i": "Xodim kasalligi sababli davolanish (taʼtil) soʻrab rahbar nomiga ARIZA yozadi — ish yuritish darsliklaridagi namunaviy ariza: «Kasalligim sababli davolanishim uchun … kunlik taʼtil berishingizni soʻrayman». Maʼlumotnoma (kasallik varaqasi) esa tibbiy muassasa tomonidan beriladi — shuning uchun bu savolda «ariza» kutilmoqda.",
+"l": "o",
+"id": "akam2_01",
+"t": 1,
+"dm": 1,
+"dp": 1
+},
+{
+"c": "til",
+"s": "d",
+"q": "Qaysi javobda nuqtalar oʻrniga «o» unlisi qoʻyiladi?",
+"o": [
+"mikr…fon, impr…t",
+"namoy…n, dil…og",
+"m…bodo, imp…rt",
+"insho…, aqr…nom"
+],
+"a": "insho…, aqr…nom",
+"i": "inshoot va agronom — ikkalasida ham «o» (koʻp xato qilinadi: inshaot, agranom). Boshqa qatorlarda kamida bitta soʻzga «a» yoziladi: dialog, mabodo. 1-qatorda «mikrofon» o bilan, ikkinchi soʻz esa («impr…t») o bilan yozilmaydi.",
+"l": "o",
+"id": "akam2_02",
+"t": 1,
+"dm": 1,
+"dp": 1
 }
 ]).filter(d=>d.c!=='mantiq').concat(DEMO_IQ);
 const H = t => /^<svg/.test(t) ? `<span class="svgo">${t}</span>` : esc(t);
@@ -13886,7 +13915,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':
 const shuffle = a => { a = a.slice(); for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
 const pick = (arr, n) => shuffle(arr).slice(0, n);
 const normA = s => s.toLowerCase().replace(/[^a-z0-9ʻʼа-яё]+/gi,'').slice(0,60);
-const byCat = k => { const a = k==='all' ? DATA : DATA.filter(d=>d.c===k); return a.filter(d=>d.dm).concat(a.filter(d=>!d.dm&&d.pf&&!d.h), a.filter(d=>!d.dm&&!d.pf&&!d.h), a.filter(d=>!d.dm&&d.h)); };
+const byCat = k => { const a = k==='all' ? DATA : DATA.filter(d=>d.c===k); return a.filter(d=>d.dm&&d.dp).concat(a.filter(d=>d.dm&&!d.dp), a.filter(d=>!d.dm&&d.pf&&!d.h), a.filter(d=>!d.dm&&!d.pf&&!d.h), a.filter(d=>!d.dm&&d.h)); };
 const pickDemoFirst = (arr,n) => { const dm=shuffle(arr.filter(d=>d.dm)), ot=shuffle(arr.filter(d=>!d.dm&&d.pf&&!d.h)).concat(shuffle(arr.filter(d=>!d.dm&&!d.pf&&!d.h))); const take=Math.min(dm.length, Math.ceil(n*0.7)); return shuffle(dm.slice(0,take).concat(ot.slice(0,n-take))); };
 const testable = DATA.filter(d=>d.t===1);
 const STOP = new Set('qaysi qanday nima necha kimlar tomonidan boʻyicha toʻgʻrisida berilgan javobni aniqlang respublikasi oʻzbekiston uchun hisoblanadi qancha muddat davomida keltirilgan'.split(' '));
